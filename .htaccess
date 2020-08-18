@@ -1,0 +1,27 @@
+#Options +FollowSymLinks
+#Options -Indexes
+#DirectoryIndex index.html index.php
+#RewriteEngine on
+#RewriteCond $1 !^(index\.php|images|robots\.txt)
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_FILENAME} !-d
+#RewriteRule ^(.*)$ /demophp/index.php/$1 [L,QSA]
+
+<ifmodule mod_headers.c>
+    Header add Access-Control-Allow-Origin "*"
+    Header add Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT" 
+    Header add Access-Control-Allow-Headers: "Content-Type"
+</ifmodule>
+
+<IfModule mod_rewrite.c>
+    Options +FollowSymLinks
+    RewriteEngine on
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond $1 !(^index\.php|libs|img|uploads|styles|images|files|photos|css|views|js|assets|robots\.txt)
+    RewriteRule ^(.*)$ index.php/$1 [QSA,L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    ErrorDocument 404 /index.php
+</IfModule>
