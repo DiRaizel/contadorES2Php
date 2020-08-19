@@ -88,6 +88,22 @@ class Read extends CI_Controller {
         echo json_encode($rsp);
     }
     
+    //
+    function actualizarPersonas() {
+        //
+        $rsp = $this->Empresa->actualizarPersonas();
+        //
+        echo json_encode($rsp);
+    }
+    
+    //
+    function generarPdf() {
+        //
+        $rsp = $this->Empresa->generarPdf();
+        //
+        echo json_encode($rsp);
+    }
+    
 //---------------------------------Entrada--------------------------------------
 //
     //

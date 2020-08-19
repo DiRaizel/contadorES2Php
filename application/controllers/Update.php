@@ -41,5 +41,13 @@ class Update extends CI_Controller {
         //
         echo $rsp;
     }
+    
+    //
+    function guardarSalida() {
+        //
+        $rsp = $this->Empresa->guardarSalida();
+        //
+        echo json_encode($rsp);
+    }
 
 }

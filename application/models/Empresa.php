@@ -283,6 +283,30 @@ class Empresa extends CI_Model {
     }
 
     //
+    function actualizarPersonas() {
+        //
+        $idEmp = $this->input->post("idEmp");
+        $idSed = $this->input->post("idSed");
+        //
+        $query = $this->db->query("SELECT ensa_poblacion from entrada_salida "
+                . "where emp_id = $idEmp and sed_id = $idSed");
+        //
+        $datos = array();
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                array_push($datos, array(
+                    'poblacion' => $row->ensa_poblacion
+                ));
+            }
+        }
+        //
+        return $datos;
+    }
+
+    //
     function traerInfo() {
         //
         $documento = $this->input->post("documento");
@@ -344,9 +368,35 @@ class Empresa extends CI_Model {
             if ($database2->insert('persona', $datos)) {
                 //
                 $idPer = $database2->insert_id();
+                //
+                $this->db->insert('cliente', array(
+                    'cli_id ' => $idPer,
+                    'cli_nombres' => $nombres,
+                    'cli_apellidos' => $apellidos,
+                    'cli_documento' => $documento,
+                    'cli_telefono' => $telefono,
+                    'cli_direccion' => $direccion,
+                    'cli_fecha' => date("Y-m-d")
+                ));
             } else {
                 //
                 $control = false;
+            }
+        } else {
+            //
+            $query = $this->db->query("SELECT reg_tipo FROM registro_entrada_"
+                    . "salida where cli_id = $idPer order by reg_id desc limit 1");
+            //
+            if (count($query->result()) > 0) {
+                //
+                foreach ($query->result() as $row) {
+                    //
+                    if ($row->reg_tipo == 'Entrada') {
+                        //
+                        $control = false;
+                        return array('estado' => 'dentro');
+                    }
+                }
             }
         }
         //
@@ -364,11 +414,161 @@ class Empresa extends CI_Model {
             //
             if ($this->db->insert('registro_entrada_salida', $datos2)) {
                 //
-                return array('estado' => 'registrado');
+                $query = $this->db->query("SELECT ensa_id, ensa_poblacion FROM"
+                        . " entrada_salida where emp_id = $idEmp and sed_id = $idSed");
+                //
+                if (count($query->result()) > 0) {
+                    //
+                    foreach ($query->result() as $row) {
+                        //
+                        $query2 = $this->db->query("update entrada_salida set "
+                                . "ensa_poblacion = ensa_poblacion + 1 where "
+                                . "ensa_id = $row->ensa_id");
+                        //
+                        if ($query2) {
+                            //
+                            return array('estado' => 'registrado');
+                        } else {
+                            //
+                            return array('estado' => 'error2');
+                        }
+                    }
+                } else {
+                    //
+                    if ($this->db->insert('entrada_salida', array(
+                                'ensa_poblacion' => 1,
+                                'emp_id' => $idEmp,
+                                'sed_id' => $idSed,
+                            ))) {
+                        //
+                        return array('estado' => 'registrado');
+                    } else {
+                        //
+                        return array('estado' => 'error3');
+                    }
+                }
             } else {
                 //
                 return array('estado' => 'error');
             }
+        }
+    }
+
+    //
+    function guardarSalida() {
+        //
+        $idPer = $this->input->post("idPer");
+        $idEmp = $this->input->post("idEmp");
+        $idSed = $this->input->post("idSed");
+        //
+        $query = $this->db->query("SELECT reg_tipo FROM registro_entrada_"
+                . "salida where cli_id = $idPer order by reg_id desc limit 1");
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                if ($row->reg_tipo == 'Entrada') {
+                    //
+                    $datos = array(
+                        'emp_id' => $idEmp,
+                        'sed_id' => $idSed,
+                        'cli_id' => $idPer,
+                        'reg_temperatura' => 0,
+                        'reg_tipo' => 'Salida',
+                        'reg_hora' => date("H:i:s"),
+                        'reg_fecha' => date("Y-m-d")
+                    );
+                    //
+                    if ($this->db->insert('registro_entrada_salida', $datos)) {
+                        //
+                        $query2 = $this->db->query("update entrada_salida set "
+                                . "ensa_poblacion = ensa_poblacion - 1 where "
+                                . "emp_id = $idEmp and sed_id = $idSed");
+                        //
+                        if ($query2) {
+                            //
+                            return array('estado' => 'registrado');
+                        } else {
+                            //
+                            return array('estado' => 'error2');
+                        }
+                    } else {
+                        //
+                        return array('estado' => 'error');
+                    }
+                } else {
+                    //
+                    return array('estado' => 'no dentro');
+                }
+            }
+        }
+    }
+
+    //
+    function generarPdf() {
+        //
+        $idEmp = $this->input->post("idEmp");
+        $idSed = $this->input->post("idSed");
+        $fecha = date("Y-m-d");
+        $fechaI = date("Y-m-d", strtotime($fecha . "- 15 days"));
+        //
+        $query = $this->db->query("SELECT emp_nombre, emp_nit from empresa "
+                . "where emp_id = $idEmp");
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                $query2 = $this->db->query("SELECT count(reg_id) as c, reg_"
+                        . "fecha from registro_entrada_salida where emp_id = "
+                        . "$idEmp and sed_id = $idSed and reg_tipo = 'Entrada' "
+                        . "and reg_fecha between '$fechaI' and '$fecha' group "
+                        . "by reg_fecha");
+                //
+                if (count($query2->result()) > 0) {
+                    //
+                    $this->load->library('F_pdf');
+                    //
+                    $this->f_pdf->pdf->AddPage();
+                    //
+                    $this->f_pdf->pdf->SetFont('Arial', 'B', 14);
+                    //
+                    $this->f_pdf->pdf->Cell(80, 10, $row->emp_nombre, 0, 0, 'C');
+                    $this->f_pdf->pdf->SetXY(10, 20);
+                    $this->f_pdf->pdf->Cell(80, 10, "Nit: $row->emp_nit", 0, 0, 'C');
+                    //
+                    $this->f_pdf->pdf->SetXY(10, 30);
+                    $this->f_pdf->pdf->Cell(40, 10, '# Entradas', 1, 0, 'C');
+                    $this->f_pdf->pdf->SetXY(50, 30);
+                    $this->f_pdf->pdf->Cell(40, 10, 'Fecha', 1, 0, 'C');
+                    //
+                    $this->f_pdf->pdf->SetFont('Arial', '', 12);
+                    $x = 10;
+                    $y = 40;
+                    //
+                    foreach ($query2->result() as $row2) {
+                        //
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 10, utf8_decode($row2->c), 1, 0, 'C');
+                        $x += 40;
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 10, utf8_decode($row2->reg_fecha), 1, 0, 'C');
+                        //
+                        $x = 10;
+                        $y += 10;
+                    }
+                    //
+                    $this->f_pdf->pdf->Output('F', "./reportes/reporte-$idEmp.pdf");
+                    return array('estado' => "reporte-$idEmp.pdf");
+                }else{
+                    //
+                    return array('estado' => "error2");
+                }
+            }
+        }else{
+            //
+            return array('estado' => "error");
         }
     }
 
