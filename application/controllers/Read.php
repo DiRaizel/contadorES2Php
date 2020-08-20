@@ -69,6 +69,14 @@ class Read extends CI_Controller {
         //
         echo json_encode($rsp);
     }
+
+    //
+    function cargarSectores() {
+        //
+        $rsp = $this->Empresa->cargarSectores();
+        //
+        echo json_encode($rsp);
+    }
     
 //---------------------------------Home-----------------------------------------
 //

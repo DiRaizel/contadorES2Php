@@ -208,6 +208,29 @@ class Empresa extends CI_Model {
     }
 
     //
+    function cargarSectores() {
+        //
+        $query = $this->db->query('SELECT sec_id, sec_nombre FROM sector order by sec_nombre asc');
+        //
+        $datos = array();
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                $datosTemp = array(
+                    'idSec' => $row->sec_id,
+                    'nombre' => $row->sec_nombre
+                );
+                //
+                array_push($datos, $datosTemp);
+            }
+        }
+        //
+        return $datos;
+    }
+
+    //
     function cargarDepartamentos() {
         //
         $query = $this->db->query('SELECT dep_id, dep_nombre FROM departamento order by dep_nombre asc');
