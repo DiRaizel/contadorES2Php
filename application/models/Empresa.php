@@ -407,6 +407,22 @@ class Empresa extends CI_Model {
             }
         } else {
             //
+            $query2 = $this->db->query("SELECT cli_nombres FROM cliente where "
+                    . "cli_id = $idPer");
+            //
+            if (count($query2->result()) === 0) {
+                //
+                $this->db->insert('cliente', array(
+                    'cli_id ' => $idPer,
+                    'cli_nombres' => $nombres,
+                    'cli_apellidos' => $apellidos,
+                    'cli_documento' => $documento,
+                    'cli_telefono' => $telefono,
+                    'cli_direccion' => $direccion,
+                    'cli_fecha' => date("Y-m-d")
+                ));
+            }
+            //
             $query = $this->db->query("SELECT reg_tipo FROM registro_entrada_"
                     . "salida where cli_id = $idPer order by reg_id desc limit 1");
             //
