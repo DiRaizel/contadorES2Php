@@ -283,10 +283,11 @@ class Empresa extends CI_Model {
     function cargarSlider() {
         //
         $sector = $this->input->post("sector");
+        $idEmp = $this->input->post("idEmp");
         //
         $query = $this->db->query("SELECT sli_id, sli_imagen, sli_url FROM "
-                . "slider where sli_sector = $sector and sli_estado = "
-                . "'Activa' order by sli_id asc");
+                . "slider where (sec_id = $sector or emp_id = $idEmp) and "
+                . "sli_estado = 'Activa' order by sli_id asc");
         //
         $datos = array();
         //
