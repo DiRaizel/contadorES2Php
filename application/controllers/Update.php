@@ -49,5 +49,13 @@ class Update extends CI_Controller {
         //
         echo json_encode($rsp);
     }
+    
+    //
+    function limitePersonas() {
+        //
+        $rsp = $this->Empresa->limitePersonas();
+        //
+        echo json_encode($rsp);
+    }
 
 }

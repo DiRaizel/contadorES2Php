@@ -601,14 +601,87 @@ class Empresa extends CI_Model {
                     //
                     $this->f_pdf->pdf->Output('F', "./reportes/reporte-$idEmp.pdf");
                     return array('estado' => "reporte-$idEmp.pdf");
-                }else{
+                } else {
                     //
                     return array('estado' => "error2");
                 }
             }
-        }else{
+        } else {
             //
             return array('estado' => "error");
+        }
+    }
+
+    //
+    function consultarLimitePersonas() {
+        //
+        $idEmp = $this->input->post("idEmp");
+        $idSed = $this->input->post("idSed");
+        //
+        $query = $this->db->query("SELECT con_max from configuracion where "
+                . "emp_id = $idEmp and sed_id = $idSed");
+        //
+        $datos = array();
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                array_push($datos, array(
+                    'limite' => (int) $row->con_max
+                ));
+            }
+        } else {
+            //
+            array_push($datos, array(
+                'limite' => (int) 0
+            ));
+        }
+        //
+        return $datos;
+    }
+
+    //
+    function limitePersonas() {
+        //
+        $idEmp = $this->input->post("idEmp");
+        $idSed = $this->input->post("idSed");
+        $limite = $this->input->post("limite");
+        //
+        $query = $this->db->query("SELECT con_id from configuracion where "
+                . "emp_id = $idEmp and sed_id = $idSed");
+        //
+        $datos = array(
+            'con_max' => $limite,
+            'emp_id' => $idEmp,
+            'sed_id' => $idSed
+        );
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                $where = array('emp_id' => $idEmp, 'sed_id' => $idSed);
+                //
+                $this->db->where($where);
+                //
+                if ($this->db->update('configuracion', array('con_max' => $limite))) {
+                    //
+                    return array('estado' => "guardado");
+                } else {
+                    //
+                    return array('estado' => "error2");
+                }
+            }
+        } else {
+            //
+            if ($this->db->insert('configuracion', $datos)) {
+                //
+                return array('estado' => "guardado");
+            } else {
+                //
+                return array('estado' => "error");
+            }
         }
     }
 

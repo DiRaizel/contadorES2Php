@@ -112,6 +112,14 @@ class Read extends CI_Controller {
         echo json_encode($rsp);
     }
     
+    //
+    function consultarLimitePersonas() {
+        //
+        $rsp = $this->Empresa->consultarLimitePersonas();
+        //
+        echo json_encode($rsp);
+    }
+    
 //---------------------------------Entrada--------------------------------------
 //
     //
