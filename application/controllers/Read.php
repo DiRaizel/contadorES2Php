@@ -107,7 +107,7 @@ class Read extends CI_Controller {
     //
     function generarPdf() {
         //
-        $rsp = $this->Empresa->generarPdf();
+        $rsp = $this->Empresa->generarPdf2();
         //
         echo json_encode($rsp);
     }

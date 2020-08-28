@@ -613,6 +613,136 @@ class Empresa extends CI_Model {
     }
 
     //
+    function generarPdf2() {
+        //
+        $idEmp = $this->input->post("idEmp");
+        $idSed = $this->input->post("idSed");
+        $fecha = date("Y-m-d");
+        $fechaI = date("Y-m-d", strtotime($fecha . "- 15 days"));
+        //
+        $query = $this->db->query("SELECT emp_nombre, emp_nit from empresa "
+                . "where emp_id = $idEmp");
+        //
+        if (count($query->result()) > 0) {
+            //
+            foreach ($query->result() as $row) {
+                //
+                $query2 = $this->db->query("SELECT count(reg_id) as c, reg_"
+                        . "fecha from registro_entrada_salida where emp_id = "
+                        . "$idEmp and sed_id = $idSed and reg_tipo = 'Entrada' "
+                        . "and reg_fecha between '$fechaI' and '$fecha' group "
+                        . "by reg_fecha");
+                //
+                if (count($query2->result()) > 0) {
+                    //
+                    $this->load->library('F_pdf');
+                    //
+                    $this->f_pdf->pdf->AddPage('L');
+                    //
+                    $this->f_pdf->pdf->SetFont('Arial', 'B', 14);
+                    //
+                    $this->f_pdf->pdf->SetXY(10, 10);
+                    $this->f_pdf->pdf->Cell(80, 10, $row->emp_nombre, 0, 0, 'L');
+                    $this->f_pdf->pdf->SetXY(10, 20);
+                    $this->f_pdf->pdf->Cell(80, 10, "Nit: $row->emp_nit", 0, 0, 'L');
+                    //
+                    $x = 10;
+                    $y = 40;
+                    //
+                    foreach ($query2->result() as $row2) {
+                        //
+                        $this->f_pdf->pdf->SetFont('Arial', 'B', 12);
+                        //
+                        $this->f_pdf->pdf->SetXY($x, $y - 5);
+                        $this->f_pdf->pdf->Cell(280, 5, 'Fecha ' . $row2->reg_fecha . ', ' . utf8_decode('número de entradas ') . $row2->c, 0, 0, 'L');
+                        //
+                        $this->f_pdf->pdf->SetFont('Arial', 'B', 9);
+                        //
+                        $query3 = $this->db->query("SELECT r.reg_id, r.reg_temperatura, c.cli_"
+                                . "nombres, c.cli_apellidos, c.cli_documento, "
+                                . "c.cli_telefono, c.cli_direccion from "
+                                . "registro_entrada_salida r join cliente c on "
+                                . "r.cli_id = c.cli_id where emp_id = $idEmp "
+                                . "and sed_id = $idSed and reg_tipo = 'Entrada'"
+                                . " and reg_fecha = '$row2->reg_fecha'");
+
+                        //
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 5, 'Fecha', 1, 0, 'C');
+                        $x += 40;
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(80, 5, 'Nombre completo', 1, 0, 'C');
+                        $x += 80;
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 5, 'Documento', 1, 0, 'C');
+                        $x += 40;
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 5, 'Telefono', 1, 0, 'C');
+                        $x += 40;
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 5, 'Direccion', 1, 0, 'C');
+                        $x += 40;
+                        $this->f_pdf->pdf->SetXY($x, $y);
+                        $this->f_pdf->pdf->Cell(40, 5, 'Temperatura', 1, 0, 'C');
+                        //
+                        $this->f_pdf->pdf->SetFont('Arial', '', 9);
+                        //
+                        if (count($query3->result()) > 0) {
+                            //
+                            foreach ($query3->result() as $row3) {
+                                //
+                                $x = 10;
+                                $y += 5;
+                                $this->f_pdf->pdf->SetXY($x, $y);
+                                $this->f_pdf->pdf->Cell(40, 5, utf8_decode($row2->reg_fecha), 1, 0, 'C');
+                                $x += 40;
+                                $this->f_pdf->pdf->SetXY($x, $y);
+                                $this->f_pdf->pdf->Cell(80, 5, utf8_decode($row3->cli_nombres . ' ' . $row3->cli_apellidos), 1, 0, 'C');
+                                $x += 80;
+                                $this->f_pdf->pdf->SetXY($x, $y);
+                                $this->f_pdf->pdf->Cell(40, 5, utf8_decode($row3->cli_documento), 1, 0, 'C');
+                                $x += 40;
+                                $this->f_pdf->pdf->SetXY($x, $y);
+                                $this->f_pdf->pdf->Cell(40, 5, utf8_decode($row3->cli_telefono), 1, 0, 'C');
+                                $x += 40;
+                                $this->f_pdf->pdf->SetXY($x, $y);
+                                $this->f_pdf->pdf->Cell(40, 5, utf8_decode($row3->cli_direccion), 1, 0, 'C');
+                                $x += 40;
+                                $this->f_pdf->pdf->SetXY($x, $y);
+                                $this->f_pdf->pdf->Cell(40, 5, utf8_decode($row3->reg_temperatura), 1, 0, 'C');
+                                //
+                                if ($y >= 180) {
+                                    //
+                                    $y = 10;
+                                    $this->f_pdf->pdf->AddPage('L');
+                                }
+                            }
+                        }
+                        //
+                        $x = 10;
+                        $y += 15;
+                        //
+                        if ($y >= 180) {
+                            //
+                            $y = 15;
+                            $this->f_pdf->pdf->AddPage('L');
+                        }
+                    }
+                    //
+                    $this->f_pdf->pdf->Output('F', "./reportes/reporte-$idEmp.pdf");
+                    return array('estado' => "reporte-$idEmp.pdf");
+                } else {
+                    //
+                    return array('estado' => "error2");
+                }
+            }
+        } else {
+            //
+            return array('estado' => "error");
+        }
+    }
+
+    //
     function consultarLimitePersonas() {
         //
         $idEmp = $this->input->post("idEmp");
