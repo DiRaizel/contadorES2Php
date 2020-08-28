@@ -597,6 +597,12 @@ class Empresa extends CI_Model {
                         //
                         $x = 10;
                         $y += 10;
+                        //
+                        if ($y >= 180) {
+                            //
+                            $y = 10;
+                            $this->f_pdf->pdf->AddPage();
+                        }
                     }
                     //
                     $this->f_pdf->pdf->Output('F', "./reportes/reporte-$idEmp.pdf");
