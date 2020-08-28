@@ -651,6 +651,7 @@ class Empresa extends CI_Model {
                     $this->f_pdf->pdf->Cell(80, 10, $row->emp_nombre, 0, 0, 'L');
                     $this->f_pdf->pdf->SetXY(10, 20);
                     $this->f_pdf->pdf->Cell(80, 10, "Nit: $row->emp_nit", 0, 0, 'L');
+                    $this->f_pdf->pdf->Image('./uploads/logoLogin.png', 200, 10, 90, 20);
                     //
                     $x = 10;
                     $y = 40;
